@@ -28,6 +28,13 @@ Grant-Distribution_System/
 │       └── src/
 │           ├── lib.rs            # Grant contract implementation
 │           └── test.rs           # Unit tests (needs alignment with current contract API)
+├── frontend/                      # React dashboard (Vite)
+│   ├── package.json
+│   ├── index.html
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       └── styles.css
 └── target/                       # Build artifacts
 ```
 
@@ -95,6 +102,30 @@ To build only the contract crate:
 
 ```bash
 cargo build -p hello-world --release
+```
+
+## Frontend (React)
+
+The React dashboard is in `frontend/` and includes UI flows for:
+
+- `create_grant`
+- `apply`
+- `approve`
+- `get_grant`
+
+Run locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Build frontend:
+
+```bash
+cd frontend
+npm run build
 ```
 
 ## Notes
