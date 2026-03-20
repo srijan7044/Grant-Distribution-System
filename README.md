@@ -1,6 +1,5 @@
 # Grant Distribution System
 
-A Soroban smart contract workspace for decentralized grant management on Stellar.
 
 A Soroban smart contract workspace Frontend for decentralized grant management on Stellar.
 
@@ -8,6 +7,8 @@ A Soroban smart contract workspace Frontend for decentralized grant management o
 
 
 # Contract Address Page (DashBoard)
+
+A Soroban smart contract workspace for decentralized grant management on Stellar.
 
 ![Project Banner](image.png)
 
