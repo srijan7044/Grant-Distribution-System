@@ -73,7 +73,7 @@ The contract is implemented in `contracts/hello-world/src/lib.rs`.
 
 - Network: Stellar Soroban
 - Contract ID: `CCKSIDB6N2EA3D3UMJFIPQIFRJHPCS7WD6UDLTUGY4DZBV7TBOVBLBJX`
-- Explorer Link: [Stellar Contract Explorer](https://lab.stellar.org/smart-contracts/contract-explorer?$=network$id=testnet&label=Testnet&horizonUrl=https:////horizon-testnet.stellar.org&rpcUrl=https:////soroban-testnet.stellar.org&passphrase=Test%20SDF%20Network%20/;%20September%202015;&smartContracts$explorer$contractId=CCKSIDB6N2EA3D3UMJFIPQIFRJHPCS7WD6UDLTUGY4DZBV7TBOVBLBJX;;)
+- Explorer Link(Contract Address): [Stellar Contract Explorer(Contract Address)](https://lab.stellar.org/r/testnet/contract/CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H)
 
 ## Tech Stack
 
