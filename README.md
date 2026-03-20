@@ -72,7 +72,7 @@ The contract is implemented in `contracts/hello-world/src/lib.rs`.
 ## Deployed Contract
 
 - Network: Stellar Soroban
-- Contract ID: `CCKSIDB6N2EA3D3UMJFIPQIFRJHPCS7WD6UDLTUGY4DZBV7TBOVBLBJX`
+- Contract ID: `CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H`
 - Explorer Link(Contract Address): [Stellar Contract Explorer(Contract Address)](https://lab.stellar.org/r/testnet/contract/CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H)
 
 ## Tech Stack
