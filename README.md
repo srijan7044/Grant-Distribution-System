@@ -4,6 +4,8 @@ A Soroban smart contract workspace for decentralized grant management on Stellar
 
 ![Project Banner](image.png)
 
+A Soroban smart contract workspace Frontend for decentralized grant management on Stellar.
+
 <img width="1844" height="1180" alt="image" src="https://github.com/user-attachments/assets/b4fc4632-bce2-4566-ac77-3e8d344f5b79" />
 
 
