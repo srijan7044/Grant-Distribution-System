@@ -505,11 +505,13 @@ export default function App() {
                 <tbody>
                   {grantList.map((grant) => (
                     <tr key={grant.id}>
-                      <td>{grant.id}</td>
-                      <td>{grant.creator}</td>
-                      <td>{grant.amount}</td>
-                      <td>{grant.recipient ?? "-"}</td>
-                      <td>{grant.approved ? "Yes" : "No"}</td>
+                      <td data-label="ID">{grant.id}</td>
+                      <td data-label="Creator">{grant.creator}</td>
+                      <td data-label="Amount">{grant.amount}</td>
+                      <td data-label="Recipient">{grant.recipient ?? "-"}</td>
+                      <td data-label="Approved">
+                        {grant.approved ? "Yes" : "No"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
