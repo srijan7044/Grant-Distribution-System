@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getAddress,
   getNetworkDetails,
@@ -40,6 +40,16 @@ function parseAmount(value) {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "light";
+    const savedTheme = window.localStorage.getItem("gds-theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      return savedTheme;
+    }
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches
+      ? "dark"
+      : "light";
+  });
   const [form, setForm] = useState(INITIAL_FORM);
   const [grants, setGrants] = useState({});
   const [selectedGrant, setSelectedGrant] = useState(null);
@@ -58,6 +68,22 @@ export default function App() {
     entries.sort((a, b) => a.id - b.id);
     return entries;
   }, [grants]);
+
+  const stats = useMemo(() => {
+    const total = grantList.length;
+    const approved = grantList.filter((grant) => grant.approved).length;
+    const pending = total - approved;
+    const totalAmount = grantList.reduce(
+      (sum, grant) => sum + Number(grant.amount || 0),
+      0,
+    );
+    return { total, approved, pending, totalAmount };
+  }, [grantList]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem("gds-theme", theme);
+  }, [theme]);
 
   function log(text) {
     const timestamp = new Date().toLocaleTimeString();
@@ -275,19 +301,58 @@ export default function App() {
     <div className="page-shell">
       <div className="mesh" aria-hidden="true" />
       <header className="hero">
+        <button
+          type="button"
+          className="theme-switcher"
+          onClick={() =>
+            setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+          }
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? "Light Theme" : "Dark Theme"}
+        </button>
         <p className="eyebrow">Soroban Contract Frontend</p>
         <h1>Grant Distribution Dashboard</h1>
         <p className="subcopy">
           Interactive React interface for create_grant, apply, approve, and
           get_grant, integrated to Soroban testnet using your deployed contract.
         </p>
-        <p className="subcopy">Contract ID: {CONTRACT_ID}</p>
-        <p className="subcopy">RPC: {SOROBAN_RPC_URL}</p>
+        <div className="hero-meta">
+          <p className="pill">Contract: {CONTRACT_ID}</p>
+          <p className="pill">RPC: {SOROBAN_RPC_URL}</p>
+          <p className="pill">
+            {walletAddress ? "Wallet Connected" : "Wallet Offline"}
+          </p>
+        </div>
         <p className="subcopy">{walletStatus}</p>
-        <button type="button" onClick={connectWallet} disabled={busy}>
+        <button
+          className="cta-button"
+          type="button"
+          onClick={connectWallet}
+          disabled={busy}
+        >
           {walletAddress ? "Reconnect Freighter" : "Connect Freighter Wallet"}
         </button>
       </header>
+
+      <section className="stat-grid" aria-label="Grant statistics">
+        <article className="stat-card">
+          <p>Total Grants</p>
+          <h3>{stats.total}</h3>
+        </article>
+        <article className="stat-card">
+          <p>Approved</p>
+          <h3>{stats.approved}</h3>
+        </article>
+        <article className="stat-card">
+          <p>Pending</p>
+          <h3>{stats.pending}</h3>
+        </article>
+        <article className="stat-card">
+          <p>Total Value</p>
+          <h3>{stats.totalAmount}</h3>
+        </article>
+      </section>
 
       <main className="grid">
         <section className="panel">
@@ -309,6 +374,7 @@ export default function App() {
                 name="id"
                 value={form.id}
                 onChange={updateField}
+                inputMode="numeric"
                 placeholder="1"
               />
             </label>
@@ -318,6 +384,7 @@ export default function App() {
                 name="amount"
                 value={form.amount}
                 onChange={updateField}
+                inputMode="numeric"
                 placeholder="1000"
               />
             </label>
@@ -346,6 +413,7 @@ export default function App() {
                 name="grantIdForApply"
                 value={form.grantIdForApply}
                 onChange={updateField}
+                inputMode="numeric"
                 placeholder="1"
               />
             </label>
@@ -374,6 +442,7 @@ export default function App() {
                 name="grantIdForApprove"
                 value={form.grantIdForApprove}
                 onChange={updateField}
+                inputMode="numeric"
                 placeholder="1"
               />
             </label>
@@ -392,6 +461,7 @@ export default function App() {
                 name="grantIdForLookup"
                 value={form.grantIdForLookup}
                 onChange={updateField}
+                inputMode="numeric"
                 placeholder="1"
               />
             </label>
