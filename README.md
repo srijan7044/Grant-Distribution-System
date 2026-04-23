@@ -10,6 +10,17 @@ A Soroban smart contract workspace Frontend for decentralized grant management o
 <img width="1844" height="1180" alt="image" src="https://github.com/user-attachments/assets/b4fc4632-bce2-4566-ac77-3e8d344f5b79" />
 
 
+#New Catagories have introduced for good user-experience.
+<img width="1911" height="450" alt="image" src="https://github.com/user-attachments/assets/d3f7883b-2856-4eec-a683-288e08681b19" />
+
+
+
+#Update Light Theme and Dark Theme introduced.
+
+<img width="1897" height="1095" alt="image" src="https://github.com/user-attachments/assets/fa549ee8-75c3-4641-9f52-c431d4f4c832" />
+
+
+
 # Contract Address Page (DashBoard)
 
 A Soroban smart contract workspace for decentralized grant management on Stellar.
