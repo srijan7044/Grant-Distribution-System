@@ -8,6 +8,7 @@ import {
 import {
   CONTRACT_ID,
   SOROBAN_RPC_URL,
+  fetchContractEvents,
   invokeContractRead,
   invokeContractWrite,
   normalizeGrant,
@@ -15,6 +16,11 @@ import {
   toScI128,
   toScU32,
 } from "./soroban";
+
+const WALLET_MODES = {
+  FREIGHTER: "freighter",
+  READ_ONLY: "read-only",
+};
 
 const INITIAL_FORM = {
   creator: "",
@@ -72,6 +78,31 @@ function friendlyError(action, grantId, rawText) {
   return rawText.length > 280 ? `${rawText.slice(0, 280)}...` : rawText;
 }
 
+function classifyErrorType(rawText) {
+  const normalized = rawText.toLowerCase();
+  if (
+    normalized.includes("invalid input") ||
+    normalized.includes("valid grant id")
+  ) {
+    return "Validation Error";
+  }
+  if (normalized.includes("freighter") || normalized.includes("wallet")) {
+    return "Wallet Error";
+  }
+  if (
+    normalized.includes("vm call trapped") ||
+    normalized.includes("transaction failed on-chain")
+  ) {
+    return "Contract Error";
+  }
+  return "Network Error";
+}
+
+function truncateMiddle(value, size = 20) {
+  if (!value || value.length <= size) return value;
+  return `${value.slice(0, 10)}...${value.slice(-8)}`;
+}
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "light";
@@ -84,6 +115,8 @@ export default function App() {
       : "light";
   });
   const [form, setForm] = useState(INITIAL_FORM);
+  const [walletMode, setWalletMode] = useState(WALLET_MODES.FREIGHTER);
+  const [customAddress, setCustomAddress] = useState("");
   const [grants, setGrants] = useState({});
   const [selectedGrant, setSelectedGrant] = useState(null);
   const [message, setMessage] = useState(
@@ -94,6 +127,13 @@ export default function App() {
   const [walletStatus, setWalletStatus] = useState(
     "Wallet not connected. Requires Freighter.",
   );
+  const [txState, setTxState] = useState({
+    stage: "idle",
+    action: "-",
+    hash: "",
+    updatedAt: "",
+  });
+  const [liveEvents, setLiveEvents] = useState([]);
   const [busy, setBusy] = useState(false);
 
   const grantList = useMemo(() => {
@@ -118,6 +158,40 @@ export default function App() {
     window.localStorage.setItem("gds-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadEvents() {
+      try {
+        const events = await fetchContractEvents({ limit: 8 });
+        if (ignore) return;
+
+        const normalized = events
+          .slice()
+          .reverse()
+          .map((event) => ({
+            id: event.id || event.pagingToken || `${event.ledger}-${event.type}`,
+            ledger: event.ledger,
+            type: event.type || "contract",
+            topics: event.topic ? JSON.stringify(event.topic) : "-",
+            value: event.value ? JSON.stringify(event.value) : "-",
+          }));
+
+        setLiveEvents(normalized);
+      } catch {
+        // Ignore transient RPC failures for live event polling.
+      }
+    }
+
+    loadEvents();
+    const timer = window.setInterval(loadEvents, 12000);
+
+    return () => {
+      ignore = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   function log(text) {
     const timestamp = new Date().toLocaleTimeString();
     setActivity((prev) => [`${timestamp}  ${text}`, ...prev].slice(0, 14));
@@ -137,9 +211,32 @@ export default function App() {
     }));
   }
 
+  function setTxStage(stage, action, hash = "") {
+    setTxState({
+      stage,
+      action,
+      hash,
+      updatedAt: new Date().toLocaleTimeString(),
+    });
+  }
+
   async function connectWallet() {
     setBusy(true);
     try {
+      if (walletMode === WALLET_MODES.READ_ONLY) {
+        const trimmed = customAddress.trim();
+        if (!trimmed.startsWith("G") || trimmed.length < 20) {
+          throw new Error("Provide a valid Stellar public key for read-only mode.");
+        }
+
+        setWalletAddress(trimmed);
+        hydrateActorFields(trimmed);
+        setWalletStatus(`Read-only wallet set: ${trimmed}`);
+        setMessage("Read-only mode enabled. You can run get_grant and view events.");
+        log(`Read-only wallet selected: ${trimmed}`);
+        return;
+      }
+
       const allow = await setAllowed();
       if (allow.error) {
         throw new Error(
@@ -197,6 +294,14 @@ export default function App() {
     return true;
   }
 
+  function ensureSignerWallet() {
+    if (walletMode !== WALLET_MODES.FREIGHTER) {
+      setMessage("This action requires Freighter signing. Switch wallet mode to Freighter.");
+      return false;
+    }
+    return true;
+  }
+
   async function fetchGrantById(grantId) {
     const raw = await invokeContractRead(walletAddress, "get_grant", [
       toScU32(grantId),
@@ -221,25 +326,29 @@ export default function App() {
     const id = parseId(form.id);
     const amount = parseAmount(form.amount);
 
-    if (!ensureWallet()) return;
+    if (!ensureWallet() || !ensureSignerWallet()) return;
     if (id === null || amount === null) {
-      setMessage("Invalid input: grant id and amount are required.");
+      setMessage("Validation Error: grant id and amount are required.");
       return;
     }
 
     setBusy(true);
+    setTxStage("pending", "create_grant");
     try {
-      await invokeContractWrite(walletAddress, "create_grant", [
+      const tx = await invokeContractWrite(walletAddress, "create_grant", [
         toScAddress(walletAddress),
         toScU32(id),
         toScI128(amount),
       ]);
       await fetchGrantById(id);
       setMessage(`Grant ${id} created on-chain.`);
+      setTxStage("success", "create_grant", tx.hash);
       log(`create_grant executed on-chain for grant ${id}`);
     } catch (error) {
       const text = friendlyError("create_grant", id, errorText(error));
-      setMessage(`create_grant failed: ${text}`);
+      const type = classifyErrorType(text);
+      setMessage(`${type}: create_grant failed: ${text}`);
+      setTxStage("error", "create_grant");
       log(`create_grant failed for grant ${id}`);
     } finally {
       setBusy(false);
@@ -250,13 +359,14 @@ export default function App() {
     event.preventDefault();
     const grantId = parseId(form.grantIdForApply);
 
-    if (!ensureWallet()) return;
+    if (!ensureWallet() || !ensureSignerWallet()) return;
     if (grantId === null) {
-      setMessage("Invalid input: grant id is required.");
+      setMessage("Validation Error: grant id is required.");
       return;
     }
 
     setBusy(true);
+    setTxStage("pending", "apply");
     try {
       try {
         await fetchGrantById(grantId);
@@ -267,16 +377,19 @@ export default function App() {
         return;
       }
 
-      await invokeContractWrite(walletAddress, "apply", [
+      const tx = await invokeContractWrite(walletAddress, "apply", [
         toScAddress(walletAddress),
         toScU32(grantId),
       ]);
       await fetchGrantById(grantId);
       setMessage(`Applied to grant ${grantId} on-chain.`);
+      setTxStage("success", "apply", tx.hash);
       log(`apply executed on-chain for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("apply", grantId, errorText(error));
-      setMessage(`apply failed: ${text}`);
+      const type = classifyErrorType(text);
+      setMessage(`${type}: apply failed: ${text}`);
+      setTxStage("error", "apply");
       log(`apply failed for grant ${grantId}`);
     } finally {
       setBusy(false);
@@ -287,13 +400,14 @@ export default function App() {
     event.preventDefault();
     const grantId = parseId(form.grantIdForApprove);
 
-    if (!ensureWallet()) return;
+    if (!ensureWallet() || !ensureSignerWallet()) return;
     if (grantId === null) {
-      setMessage("Invalid input: grant id is required.");
+      setMessage("Validation Error: grant id is required.");
       return;
     }
 
     setBusy(true);
+    setTxStage("pending", "approve");
     try {
       try {
         await fetchGrantById(grantId);
@@ -304,16 +418,19 @@ export default function App() {
         return;
       }
 
-      await invokeContractWrite(walletAddress, "approve", [
+      const tx = await invokeContractWrite(walletAddress, "approve", [
         toScAddress(walletAddress),
         toScU32(grantId),
       ]);
       await fetchGrantById(grantId);
       setMessage(`Grant ${grantId} approved on-chain.`);
+      setTxStage("success", "approve", tx.hash);
       log(`approve executed on-chain for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("approve", grantId, errorText(error));
-      setMessage(`approve failed: ${text}`);
+      const type = classifyErrorType(text);
+      setMessage(`${type}: approve failed: ${text}`);
+      setTxStage("error", "approve");
       log(`approve failed for grant ${grantId}`);
     } finally {
       setBusy(false);
@@ -326,22 +443,27 @@ export default function App() {
 
     if (!ensureWallet()) return;
     if (grantId === null) {
-      setMessage("Enter a valid grant id for lookup.");
+      setMessage("Validation Error: enter a valid grant id for lookup.");
       return;
     }
 
     setBusy(true);
+    setTxStage("pending", "get_grant");
     try {
       const found = await fetchGrantById(grantId);
       if (!found) {
         setMessage(`Grant ${grantId} not found.`);
+        setTxStage("error", "get_grant");
         return;
       }
       setMessage(`Loaded grant ${grantId} from chain.`);
+      setTxStage("success", "get_grant");
       log(`get_grant simulated successfully for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("get_grant", grantId, errorText(error));
-      setMessage(`get_grant failed: ${text}`);
+      const type = classifyErrorType(text);
+      setMessage(`${type}: get_grant failed: ${text}`);
+      setTxStage("error", "get_grant");
       log(`get_grant failed for grant ${grantId}`);
     } finally {
       setBusy(false);
@@ -371,19 +493,49 @@ export default function App() {
         <div className="hero-meta">
           <p className="pill">Contract: {CONTRACT_ID}</p>
           <p className="pill">RPC: {SOROBAN_RPC_URL}</p>
+          <p className="pill">Network: Stellar Testnet</p>
           <p className="pill">
             {walletAddress ? "Wallet Connected" : "Wallet Offline"}
           </p>
         </div>
         <p className="subcopy">{walletStatus}</p>
-        <button
-          className="cta-button"
-          type="button"
-          onClick={connectWallet}
-          disabled={busy}
-        >
-          {walletAddress ? "Reconnect Freighter" : "Connect Freighter Wallet"}
-        </button>
+        <div className="wallet-bar">
+          <label>
+            Wallet Mode
+            <select
+              value={walletMode}
+              onChange={(event) => setWalletMode(event.target.value)}
+              disabled={busy}
+            >
+              <option value={WALLET_MODES.FREIGHTER}>Freighter (signing)</option>
+              <option value={WALLET_MODES.READ_ONLY}>Read-only address</option>
+            </select>
+          </label>
+
+          {walletMode === WALLET_MODES.READ_ONLY && (
+            <label>
+              Public Key
+              <input
+                value={customAddress}
+                onChange={(event) => setCustomAddress(event.target.value)}
+                placeholder="G..."
+              />
+            </label>
+          )}
+
+          <button
+            className="cta-button"
+            type="button"
+            onClick={connectWallet}
+            disabled={busy}
+          >
+            {walletMode === WALLET_MODES.FREIGHTER
+              ? walletAddress
+                ? "Reconnect Freighter"
+                : "Connect Freighter Wallet"
+              : "Set Read-only Wallet"}
+          </button>
+        </div>
       </header>
 
       <section className="stat-grid" aria-label="Grant statistics">
@@ -556,11 +708,11 @@ export default function App() {
                 <tbody>
                   {grantList.map((grant) => (
                     <tr key={grant.id}>
-                      <td>{grant.id}</td>
-                      <td>{grant.creator}</td>
-                      <td>{grant.amount}</td>
-                      <td>{grant.recipient ?? "-"}</td>
-                      <td>{grant.approved ? "Yes" : "No"}</td>
+                      <td data-label="ID">{grant.id}</td>
+                      <td data-label="Creator">{grant.creator}</td>
+                      <td data-label="Amount">{grant.amount}</td>
+                      <td data-label="Recipient">{grant.recipient ?? "-"}</td>
+                      <td data-label="Approved">{grant.approved ? "Yes" : "No"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -572,11 +724,40 @@ export default function App() {
         <section className="panel">
           <h2>Status</h2>
           <p className="status">{message}</p>
+
+          <h3>Transaction Monitor</h3>
+          <p className={`tx-badge tx-${txState.stage}`}>
+            {txState.stage.toUpperCase()} - {txState.action}
+          </p>
+          <ul className="tx-list">
+            <li>Updated: {txState.updatedAt || "-"}</li>
+            <li>Hash: {txState.hash ? truncateMiddle(txState.hash) : "-"}</li>
+          </ul>
+
           <h3>Recent Activity</h3>
           <ul className="activity-log">
             {activity.length === 0 && <li>No activity yet.</li>}
             {activity.map((line) => (
               <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="panel wide">
+          <h2>Live Contract Events</h2>
+          <p className="muted">
+            Auto-refreshing from testnet every 12 seconds for deployed contract events.
+          </p>
+          <ul className="event-list">
+            {liveEvents.length === 0 && <li>No events yet.</li>}
+            {liveEvents.map((event) => (
+              <li key={event.id}>
+                <strong>Ledger {event.ledger}</strong> | {event.type}
+                <br />
+                Topics: {event.topics}
+                <br />
+                Value: {event.value}
+              </li>
             ))}
           </ul>
         </section>
