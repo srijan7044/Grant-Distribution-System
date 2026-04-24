@@ -175,3 +175,62 @@ npm run build
 ## License
 
 MIT License
+
+---
+
+## Latest Updates (Do Not Delete Old Content)
+
+This section is added to record the latest upgrades completed in this project.
+
+### Level 2 Progress Summary
+
+- Multi-wallet support added in frontend:
+  - Freighter mode (signing transactions)
+  - Read-only public address mode
+- Smart contract calls from frontend are fully integrated:
+  - `create_grant`
+  - `apply`
+  - `approve`
+  - `get_grant`
+- Transaction monitor added:
+  - Pending / Success / Error status
+  - Last update time
+  - Transaction hash preview
+- Real-time contract event integration added:
+  - Testnet event polling every 12 seconds
+  - Live contract event feed shown in dashboard
+- Error handling improved with user-friendly messages:
+  - Validation errors
+  - Wallet-related errors
+  - Contract execution errors
+  - Network/other fallback errors
+
+### UI/UX Enhancements Completed
+
+- Modern dashboard styling refresh
+- Dark theme + Light theme toggle
+- Improved readability for:
+  - Selected Grant card in dark mode
+  - Placeholder/input text in dark mode
+  - Long wallet addresses/hashes (no overflow)
+- Mobile responsive layout improvements:
+  - Better spacing and panel behavior
+  - Table-to-card transformation on small screens
+  - Touch-friendly inputs/buttons
+- Additional right-side utility feature added:
+  - Smart ID Assistant
+  - Auto-fill grant ID fields
+  - Reuse selected grant ID
+  - Clear ID fields quickly
+
+### Deployed Contract (Testnet)
+
+- Contract ID: `CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H`
+- Explorer: https://lab.stellar.org/r/testnet/contract/CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H
+
+### Recent Meaningful Commits
+
+- `833390a` feat: add multi-wallet flow, tx monitor, and live contract events
+- `69df64a` style: polish wallet monitor and responsive event dashboard
+- `c7c7a35` feat: implement suggested grant ID functionality and enhance UI components
+
