@@ -178,7 +178,7 @@ MIT License
 
 ---
 
-## Latest Updates (Do Not Delete Old Content)
+## Latest Updates 
 
 This section is added to record the latest upgrades completed in this project.
 
@@ -236,7 +236,7 @@ This section is added to record the latest upgrades completed in this project.
 
 ---
 
-## Level 3 - Orange Belt Submission
+## For Level 3 - Orange Belt Submission.
 
 ### Overview
 
