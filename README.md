@@ -28,6 +28,11 @@ A Soroban smart contract workspace for decentralized grant management on Stellar
 ![Project Banner](image.png)
 
 
+## Trnsactions are made Possible 
+<img width="1416" height="866" alt="image" src="https://github.com/user-attachments/assets/d486af41-8091-4c83-afdc-52b374a99c36" />
+
+## the proof and record 
+<img width="1515" height="473" alt="image" src="https://github.com/user-attachments/assets/617e5fd2-0a72-4148-b035-bf7a50c1682a" />
 
 
 ## Overview
