@@ -39,6 +39,39 @@ function parseAmount(value) {
   return parsed;
 }
 
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isMissingGrantError(text, grantId) {
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  const hasVmTrap =
+    normalized.includes("unreachablecodereached") ||
+    normalized.includes("error(wasmvm, invalidaction)");
+  const hasGetGrantHint =
+    normalized.includes("get_grant") ||
+    normalized.includes(`data:${grantId}`) ||
+    normalized.includes("vm call trapped");
+  return hasVmTrap && hasGetGrantHint;
+}
+
+function friendlyError(action, grantId, rawText) {
+  if (grantId !== null && isMissingGrantError(rawText, grantId)) {
+    return `Grant ${grantId} does not exist on-chain yet. Create it first, then run ${action}.`;
+  }
+
+  if (rawText.includes("Freighter") && rawText.includes("sign")) {
+    return "Freighter signature was rejected or unavailable. Unlock Freighter and approve the request.";
+  }
+
+  if (rawText.includes("Transaction did not succeed")) {
+    return "Transaction failed on-chain. Verify wallet network (testnet), input values, and contract state.";
+  }
+
+  return rawText.length > 280 ? `${rawText.slice(0, 280)}...` : rawText;
+}
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "light";
@@ -205,7 +238,7 @@ export default function App() {
       setMessage(`Grant ${id} created on-chain.`);
       log(`create_grant executed on-chain for grant ${id}`);
     } catch (error) {
-      const text = error instanceof Error ? error.message : String(error);
+      const text = friendlyError("create_grant", id, errorText(error));
       setMessage(`create_grant failed: ${text}`);
       log(`create_grant failed for grant ${id}`);
     } finally {
@@ -225,6 +258,15 @@ export default function App() {
 
     setBusy(true);
     try {
+      try {
+        await fetchGrantById(grantId);
+      } catch (prefetchError) {
+        const text = friendlyError("apply", grantId, errorText(prefetchError));
+        setMessage(text);
+        log(`apply blocked: grant ${grantId} not ready`);
+        return;
+      }
+
       await invokeContractWrite(walletAddress, "apply", [
         toScAddress(walletAddress),
         toScU32(grantId),
@@ -233,7 +275,7 @@ export default function App() {
       setMessage(`Applied to grant ${grantId} on-chain.`);
       log(`apply executed on-chain for grant ${grantId}`);
     } catch (error) {
-      const text = error instanceof Error ? error.message : String(error);
+      const text = friendlyError("apply", grantId, errorText(error));
       setMessage(`apply failed: ${text}`);
       log(`apply failed for grant ${grantId}`);
     } finally {
@@ -253,6 +295,15 @@ export default function App() {
 
     setBusy(true);
     try {
+      try {
+        await fetchGrantById(grantId);
+      } catch (prefetchError) {
+        const text = friendlyError("approve", grantId, errorText(prefetchError));
+        setMessage(text);
+        log(`approve blocked: grant ${grantId} not ready`);
+        return;
+      }
+
       await invokeContractWrite(walletAddress, "approve", [
         toScAddress(walletAddress),
         toScU32(grantId),
@@ -261,7 +312,7 @@ export default function App() {
       setMessage(`Grant ${grantId} approved on-chain.`);
       log(`approve executed on-chain for grant ${grantId}`);
     } catch (error) {
-      const text = error instanceof Error ? error.message : String(error);
+      const text = friendlyError("approve", grantId, errorText(error));
       setMessage(`approve failed: ${text}`);
       log(`approve failed for grant ${grantId}`);
     } finally {
@@ -289,7 +340,7 @@ export default function App() {
       setMessage(`Loaded grant ${grantId} from chain.`);
       log(`get_grant simulated successfully for grant ${grantId}`);
     } catch (error) {
-      const text = error instanceof Error ? error.message : String(error);
+      const text = friendlyError("get_grant", grantId, errorText(error));
       setMessage(`get_grant failed: ${text}`);
       log(`get_grant failed for grant ${grantId}`);
     } finally {
