@@ -153,6 +153,11 @@ export default function App() {
     return { total, approved, pending, totalAmount };
   }, [grantList]);
 
+  const suggestedGrantId = useMemo(() => {
+    if (grantList.length === 0) return 1;
+    return Math.max(...grantList.map((grant) => grant.id)) + 1;
+  }, [grantList]);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     window.localStorage.setItem("gds-theme", theme);
@@ -170,7 +175,8 @@ export default function App() {
           .slice()
           .reverse()
           .map((event) => ({
-            id: event.id || event.pagingToken || `${event.ledger}-${event.type}`,
+            id:
+              event.id || event.pagingToken || `${event.ledger}-${event.type}`,
             ledger: event.ledger,
             type: event.type || "contract",
             topics: event.topic ? JSON.stringify(event.topic) : "-",
@@ -220,19 +226,64 @@ export default function App() {
     });
   }
 
+  function fillGrantIdFields(grantIdValue) {
+    const next = String(grantIdValue);
+    setForm((prev) => ({
+      ...prev,
+      id: next,
+      grantIdForApply: next,
+      grantIdForApprove: next,
+      grantIdForLookup: next,
+    }));
+  }
+
+  function useSuggestedGrantId() {
+    fillGrantIdFields(suggestedGrantId);
+    setMessage(
+      `Suggestion applied: grant id ${suggestedGrantId} copied to all forms.`,
+    );
+    log(`Suggested grant id ${suggestedGrantId} applied`);
+  }
+
+  function useSelectedGrantId() {
+    if (!selectedGrant) {
+      setMessage("Load a grant first, then you can reuse its ID in all forms.");
+      return;
+    }
+    fillGrantIdFields(selectedGrant.id);
+    setMessage(`Selected grant id ${selectedGrant.id} copied to all forms.`);
+    log(`Selected grant id ${selectedGrant.id} applied to all forms`);
+  }
+
+  function clearGrantIdFields() {
+    setForm((prev) => ({
+      ...prev,
+      id: "",
+      grantIdForApply: "",
+      grantIdForApprove: "",
+      grantIdForLookup: "",
+    }));
+    setMessage("Grant ID fields cleared.");
+    log("Grant ID fields cleared");
+  }
+
   async function connectWallet() {
     setBusy(true);
     try {
       if (walletMode === WALLET_MODES.READ_ONLY) {
         const trimmed = customAddress.trim();
         if (!trimmed.startsWith("G") || trimmed.length < 20) {
-          throw new Error("Provide a valid Stellar public key for read-only mode.");
+          throw new Error(
+            "Provide a valid Stellar public key for read-only mode.",
+          );
         }
 
         setWalletAddress(trimmed);
         hydrateActorFields(trimmed);
         setWalletStatus(`Read-only wallet set: ${trimmed}`);
-        setMessage("Read-only mode enabled. You can run get_grant and view events.");
+        setMessage(
+          "Read-only mode enabled. You can run get_grant and view events.",
+        );
         log(`Read-only wallet selected: ${trimmed}`);
         return;
       }
@@ -296,7 +347,9 @@ export default function App() {
 
   function ensureSignerWallet() {
     if (walletMode !== WALLET_MODES.FREIGHTER) {
-      setMessage("This action requires Freighter signing. Switch wallet mode to Freighter.");
+      setMessage(
+        "This action requires Freighter signing. Switch wallet mode to Freighter.",
+      );
       return false;
     }
     return true;
@@ -412,7 +465,11 @@ export default function App() {
       try {
         await fetchGrantById(grantId);
       } catch (prefetchError) {
-        const text = friendlyError("approve", grantId, errorText(prefetchError));
+        const text = friendlyError(
+          "approve",
+          grantId,
+          errorText(prefetchError),
+        );
         setMessage(text);
         log(`approve blocked: grant ${grantId} not ready`);
         return;
@@ -507,7 +564,9 @@ export default function App() {
               onChange={(event) => setWalletMode(event.target.value)}
               disabled={busy}
             >
-              <option value={WALLET_MODES.FREIGHTER}>Freighter (signing)</option>
+              <option value={WALLET_MODES.FREIGHTER}>
+                Freighter (signing)
+              </option>
               <option value={WALLET_MODES.READ_ONLY}>Read-only address</option>
             </select>
           </label>
@@ -712,7 +771,9 @@ export default function App() {
                       <td data-label="Creator">{grant.creator}</td>
                       <td data-label="Amount">{grant.amount}</td>
                       <td data-label="Recipient">{grant.recipient ?? "-"}</td>
-                      <td data-label="Approved">{grant.approved ? "Yes" : "No"}</td>
+                      <td data-label="Approved">
+                        {grant.approved ? "Yes" : "No"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -721,7 +782,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="panel">
+        <section className="panel side status-panel">
           <h2>Status</h2>
           <p className="status">{message}</p>
 
@@ -746,7 +807,8 @@ export default function App() {
         <section className="panel wide">
           <h2>Live Contract Events</h2>
           <p className="muted">
-            Auto-refreshing from testnet every 12 seconds for deployed contract events.
+            Auto-refreshing from testnet every 12 seconds for deployed contract
+            events.
           </p>
           <ul className="event-list">
             {liveEvents.length === 0 && <li>No events yet.</li>}
@@ -760,6 +822,43 @@ export default function App() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="panel side tool-panel">
+          <h2>Smart ID Assistant</h2>
+          <p className="muted">
+            Keep all grant forms in sync to avoid ID mismatch errors.
+          </p>
+          <div className="quick-tools">
+            <p>
+              Suggested Next ID: <strong>{suggestedGrantId}</strong>
+            </p>
+            <div className="tool-actions">
+              <button
+                type="button"
+                onClick={useSuggestedGrantId}
+                disabled={busy}
+              >
+                Use Suggested ID
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={useSelectedGrantId}
+                disabled={busy}
+              >
+                Use Selected Grant ID
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={clearGrantIdFields}
+                disabled={busy}
+              >
+                Clear ID Fields
+              </button>
+            </div>
+          </div>
         </section>
       </main>
     </div>

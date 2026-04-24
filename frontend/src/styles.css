@@ -265,7 +265,7 @@ select {
   grid-column: span 8;
 }
 
-.panel:last-child {
+.panel.side {
   grid-column: span 4;
 }
 
@@ -357,6 +357,28 @@ button:disabled {
   background: rgba(255, 255, 255, 0.66);
 }
 
+.grant-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .grant-card {
+  border-color: rgba(190, 219, 214, 0.34);
+  background: linear-gradient(
+    145deg,
+    rgba(23, 37, 38, 0.96),
+    rgba(16, 27, 28, 0.98)
+  );
+}
+
+[data-theme="dark"] .grant-card h3 {
+  color: #ebfffb;
+}
+
+[data-theme="dark"] .grant-card li,
+[data-theme="dark"] .grant-card p {
+  color: #cfe8e3;
+}
+
 .grant-card ul,
 .activity-log {
   margin: 0;
@@ -435,6 +457,34 @@ th {
   padding-left: 1.1rem;
 }
 
+.quick-tools {
+  border: 1px dashed rgba(38, 70, 83, 0.26);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.54);
+  padding: 0.65rem;
+}
+
+.quick-tools p {
+  margin: 0 0 0.5rem;
+}
+
+.tool-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ghost-button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(38, 70, 83, 0.25);
+  box-shadow: none;
+}
+
+.ghost-button:hover {
+  box-shadow: none;
+  background: rgba(31, 62, 74, 0.08);
+}
+
 .event-list li {
   margin-bottom: 0.6rem;
   overflow-wrap: anywhere;
@@ -478,6 +528,20 @@ th {
   color: #cfe8e3;
 }
 
+[data-theme="dark"] .quick-tools {
+  border-color: rgba(190, 219, 214, 0.28);
+  background: rgba(20, 33, 34, 0.74);
+}
+
+[data-theme="dark"] .ghost-button {
+  color: #d9ece8;
+  border-color: rgba(190, 219, 214, 0.3);
+}
+
+[data-theme="dark"] .ghost-button:hover {
+  background: rgba(190, 219, 214, 0.12);
+}
+
 .muted {
   color: var(--muted);
 }
@@ -485,6 +549,13 @@ th {
 .activity-log li {
   margin-bottom: 0.36rem;
   color: #324b49;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tx-list li {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @keyframes fade-up {
@@ -519,7 +590,7 @@ th {
   .panel:nth-child(3),
   .panel:nth-child(4),
   .panel.wide,
-  .panel:last-child {
+  .panel.side {
     grid-column: span 12;
   }
 
