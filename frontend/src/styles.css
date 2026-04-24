@@ -150,6 +150,34 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.wallet-bar {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.wallet-bar label {
+  font-size: 0.84rem;
+}
+
+select {
+  font: inherit;
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  border-radius: var(--radius-md);
+  padding: 0.56rem 0.66rem;
+  min-height: 44px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.97);
+}
+
+[data-theme="dark"] select {
+  border-color: rgba(166, 206, 201, 0.26);
+  background: rgba(19, 31, 32, 0.9);
+  color: #e7f0ee;
+}
+
 .cta-button {
   margin-top: 0.45rem;
 }
@@ -237,7 +265,7 @@ h1 {
   grid-column: span 8;
 }
 
-.panel:last-child {
+.panel.side {
   grid-column: span 4;
 }
 
@@ -329,13 +357,21 @@ button:disabled {
   background: rgba(255, 255, 255, 0.66);
 }
 
+.grant-card h3 {
+  margin-bottom: 0.5rem;
+}
+
 [data-theme="dark"] .grant-card {
-  border-color: rgba(192, 223, 217, 0.3);
-  background: rgba(19, 31, 32, 0.9);
+  border-color: rgba(190, 219, 214, 0.34);
+  background: linear-gradient(
+    145deg,
+    rgba(23, 37, 38, 0.96),
+    rgba(16, 27, 28, 0.98)
+  );
 }
 
 [data-theme="dark"] .grant-card h3 {
-  color: #e8fbf7;
+  color: #ebfffb;
 }
 
 [data-theme="dark"] .grant-card li,
@@ -388,6 +424,72 @@ th {
   overflow-wrap: anywhere;
 }
 
+.tx-badge {
+  padding: 0.44rem 0.62rem;
+  border-radius: 8px;
+  font-weight: 700;
+  margin: 0.2rem 0 0.45rem;
+}
+
+.tx-idle {
+  background: rgba(38, 70, 83, 0.12);
+  color: #264653;
+}
+
+.tx-pending {
+  background: rgba(233, 168, 36, 0.2);
+  color: #7a4f00;
+}
+
+.tx-success {
+  background: rgba(15, 118, 110, 0.2);
+  color: #0b4f49;
+}
+
+.tx-error {
+  background: rgba(204, 95, 67, 0.22);
+  color: #7a2413;
+}
+
+.tx-list,
+.event-list {
+  margin: 0 0 0.7rem;
+  padding-left: 1.1rem;
+}
+
+.quick-tools {
+  border: 1px dashed rgba(38, 70, 83, 0.26);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.54);
+  padding: 0.65rem;
+}
+
+.quick-tools p {
+  margin: 0 0 0.5rem;
+}
+
+.tool-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ghost-button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(38, 70, 83, 0.25);
+  box-shadow: none;
+}
+
+.ghost-button:hover {
+  box-shadow: none;
+  background: rgba(31, 62, 74, 0.08);
+}
+
+.event-list li {
+  margin-bottom: 0.6rem;
+  overflow-wrap: anywhere;
+}
+
 [data-theme="dark"] .pill {
   color: #d9ece8;
   background: rgba(20, 34, 35, 0.7);
@@ -397,8 +499,47 @@ th {
   color: #d7f1eb;
 }
 
+[data-theme="dark"] .tx-idle {
+  background: rgba(153, 195, 187, 0.14);
+  color: #d5efea;
+}
+
+[data-theme="dark"] .tx-pending {
+  background: rgba(233, 168, 36, 0.22);
+  color: #ffe5ab;
+}
+
+[data-theme="dark"] .tx-success {
+  background: rgba(30, 181, 163, 0.2);
+  color: #d7fbf4;
+}
+
+[data-theme="dark"] .tx-error {
+  background: rgba(229, 126, 95, 0.25);
+  color: #ffd8cc;
+}
+
 [data-theme="dark"] .activity-log li {
   color: #bdd5d1;
+}
+
+[data-theme="dark"] .event-list li,
+[data-theme="dark"] .tx-list li {
+  color: #cfe8e3;
+}
+
+[data-theme="dark"] .quick-tools {
+  border-color: rgba(190, 219, 214, 0.28);
+  background: rgba(20, 33, 34, 0.74);
+}
+
+[data-theme="dark"] .ghost-button {
+  color: #d9ece8;
+  border-color: rgba(190, 219, 214, 0.3);
+}
+
+[data-theme="dark"] .ghost-button:hover {
+  background: rgba(190, 219, 214, 0.12);
 }
 
 .muted {
@@ -408,6 +549,13 @@ th {
 .activity-log li {
   margin-bottom: 0.36rem;
   color: #324b49;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tx-list li {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @keyframes fade-up {
@@ -442,7 +590,7 @@ th {
   .panel:nth-child(3),
   .panel:nth-child(4),
   .panel.wide,
-  .panel:last-child {
+  .panel.side {
     grid-column: span 12;
   }
 
@@ -460,6 +608,10 @@ th {
 
   h1 {
     font-size: clamp(1.58rem, 8vw, 2rem);
+  }
+
+  .wallet-bar {
+    grid-template-columns: 1fr;
   }
 
   .hero-meta {
@@ -561,7 +713,8 @@ th {
   }
 
   .grant-card li,
-  .activity-log li {
+  .activity-log li,
+  .event-list li {
     overflow-wrap: anywhere;
   }
 }

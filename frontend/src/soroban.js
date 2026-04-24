@@ -94,7 +94,30 @@ export async function invokeContractWrite(sourceAddress, method, args) {
     );
   }
 
-  return finalStatus;
+  return {
+    hash: submission.hash,
+    status: finalStatus.status,
+    resultXdr: finalStatus.resultXdr,
+  };
+}
+
+export async function fetchContractEvents({ limit = 8 } = {}) {
+  const latest = await server.getLatestLedger();
+  const startLedger = Math.max(1, latest.sequence - 250);
+  const response = await server.getEvents({
+    startLedger,
+    filters: [
+      {
+        type: "contract",
+        contractIds: [CONTRACT_ID],
+      },
+    ],
+    pagination: {
+      limit,
+    },
+  });
+
+  return response.events || [];
 }
 
 function stringifyAddress(value) {
