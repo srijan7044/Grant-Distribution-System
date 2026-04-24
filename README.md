@@ -234,3 +234,65 @@ This section is added to record the latest upgrades completed in this project.
 - `69df64a` style: polish wallet monitor and responsive event dashboard
 - `c7c7a35` feat: implement suggested grant ID functionality and enhance UI components
 
+---
+
+## Level 3 - Orange Belt Submission
+
+### Overview
+
+This project is upgraded as a complete end-to-end mini-dApp with loading states, basic caching, tests, and documentation.
+
+### Level 3 Requirements Coverage
+
+- Mini-dApp fully functional: Yes
+- Minimum 3 tests passing: Yes (4 tests passing)
+- README complete: Updated with Level 3 section
+- Demo video recorded: Add your link below
+- Minimum 3+ meaningful commits: Yes (see commit list below)
+
+### What Is Implemented
+
+- Loading states and progress indicators:
+  - Busy-state buttons
+  - Transaction monitor (idle/pending/success/error)
+- Basic caching implementation:
+  - In-memory grant registry cache using React state
+- Smart contract integration:
+  - Read/write calls from frontend to deployed Soroban contract on testnet
+- Real-time synchronization:
+  - Contract event polling and live event feed in UI
+- Multi-wallet experience:
+  - Freighter mode (signing)
+  - Read-only address mode
+
+### Test Output (3+ tests passing)
+
+Latest test run summary:
+
+```text
+Test Files  1 passed (1)
+Tests       4 passed (4)
+```
+
+Screenshot placeholder (required for submission):
+- Add screenshot here: `docs/test-output.png`
+
+### Required Submission Info
+
+- Live demo link (Vercel/Netlify/etc):
+  - Add link: `https://your-live-demo-url`
+- Demo video link (1-minute full flow):
+  - Add link: `https://your-demo-video-url`
+- Deployed contract address:
+  - `CATPXZOYKHSICJXRQXIYEZWZXAQEZIJ4DH2UFX4QTQAP6LYSAYXQNB7H`
+- Verifiable transaction hash (contract call):
+  - Add hash: `REPLACE_WITH_TX_HASH`
+  - Explorer template: `https://stellar.expert/explorer/testnet/tx/REPLACE_WITH_TX_HASH`
+
+### 3+ Meaningful Commits
+
+- `833390a` feat: add multi-wallet flow, tx monitor, and live contract events
+- `69df64a` style: polish wallet monitor and responsive event dashboard
+- `c7c7a35` feat: implement suggested grant ID functionality and enhance UI components
+
+
