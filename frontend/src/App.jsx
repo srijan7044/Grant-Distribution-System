@@ -16,6 +16,7 @@ import {
   toScI128,
   toScU32,
 } from "./soroban";
+import { reportError } from "./monitoring";
 
 const WALLET_MODES = {
   FREIGHTER: "freighter",
@@ -26,10 +27,13 @@ const INITIAL_FORM = {
   creator: "",
   id: "",
   amount: "",
+  tokenAddress: "",
   applicant: "",
   grantIdForApply: "",
   admin: "",
   grantIdForApprove: "",
+  grantIdForFund: "",
+  grantIdForDisburse: "",
   grantIdForLookup: "",
 };
 
@@ -146,11 +150,12 @@ export default function App() {
     const total = grantList.length;
     const approved = grantList.filter((grant) => grant.approved).length;
     const pending = total - approved;
+    const tokenized = grantList.filter((grant) => Boolean(grant.token)).length;
     const totalAmount = grantList.reduce(
       (sum, grant) => sum + Number(grant.amount || 0),
       0,
     );
-    return { total, approved, pending, totalAmount };
+    return { total, approved, pending, tokenized, totalAmount };
   }, [grantList]);
 
   const suggestedGrantId = useMemo(() => {
@@ -233,6 +238,8 @@ export default function App() {
       id: next,
       grantIdForApply: next,
       grantIdForApprove: next,
+      grantIdForFund: next,
+      grantIdForDisburse: next,
       grantIdForLookup: next,
     }));
   }
@@ -261,6 +268,8 @@ export default function App() {
       id: "",
       grantIdForApply: "",
       grantIdForApprove: "",
+      grantIdForFund: "",
+      grantIdForDisburse: "",
       grantIdForLookup: "",
     }));
     setMessage("Grant ID fields cleared.");
@@ -328,6 +337,7 @@ export default function App() {
       log(`Freighter connected for ${nextAddress}`);
     } catch (error) {
       const text = error instanceof Error ? error.message : String(error);
+      reportError(error, { action: "connect_wallet", walletMode });
       setWalletStatus(
         `Connection failed: ${text}. If Freighter is installed, unlock it and allow localhost access.`,
       );
@@ -399,6 +409,7 @@ export default function App() {
       log(`create_grant executed on-chain for grant ${id}`);
     } catch (error) {
       const text = friendlyError("create_grant", id, errorText(error));
+      reportError(error, { action: "create_grant", grantId: id });
       const type = classifyErrorType(text);
       setMessage(`${type}: create_grant failed: ${text}`);
       setTxStage("error", "create_grant");
@@ -440,10 +451,121 @@ export default function App() {
       log(`apply executed on-chain for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("apply", grantId, errorText(error));
+      reportError(error, { action: "apply", grantId });
       const type = classifyErrorType(text);
       setMessage(`${type}: apply failed: ${text}`);
       setTxStage("error", "apply");
       log(`apply failed for grant ${grantId}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createTokenGrant(event) {
+    event.preventDefault();
+
+    const id = parseId(form.id);
+    const amount = parseAmount(form.amount);
+    const tokenAddress = form.tokenAddress.trim();
+
+    if (!ensureWallet() || !ensureSignerWallet()) return;
+    if (id === null || amount === null || tokenAddress.length < 20) {
+      setMessage(
+        "Validation Error: grant id, amount, and token contract address are required.",
+      );
+      return;
+    }
+
+    setBusy(true);
+    setTxStage("pending", "create_token_grant");
+    try {
+      const tx = await invokeContractWrite(
+        walletAddress,
+        "create_token_grant",
+        [
+          toScAddress(walletAddress),
+          toScU32(id),
+          toScAddress(tokenAddress),
+          toScI128(amount),
+        ],
+      );
+      await fetchGrantById(id);
+      setMessage(`Token grant ${id} created on-chain.`);
+      setTxStage("success", "create_token_grant", tx.hash);
+      log(`create_token_grant executed for grant ${id}`);
+    } catch (error) {
+      const text = friendlyError("create_token_grant", id, errorText(error));
+      reportError(error, { action: "create_token_grant", grantId: id });
+      const type = classifyErrorType(text);
+      setMessage(`${type}: create_token_grant failed: ${text}`);
+      setTxStage("error", "create_token_grant");
+      log(`create_token_grant failed for grant ${id}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function fundTokenGrant(event) {
+    event.preventDefault();
+    const grantId = parseId(form.grantIdForFund);
+
+    if (!ensureWallet() || !ensureSignerWallet()) return;
+    if (grantId === null) {
+      setMessage("Validation Error: grant id is required.");
+      return;
+    }
+
+    setBusy(true);
+    setTxStage("pending", "fund_grant");
+    try {
+      const tx = await invokeContractWrite(walletAddress, "fund_grant", [
+        toScAddress(walletAddress),
+        toScU32(grantId),
+      ]);
+      await fetchGrantById(grantId);
+      setMessage(`Grant ${grantId} funded into escrow.`);
+      setTxStage("success", "fund_grant", tx.hash);
+      log(`fund_grant executed for grant ${grantId}`);
+    } catch (error) {
+      const text = friendlyError("fund_grant", grantId, errorText(error));
+      reportError(error, { action: "fund_grant", grantId });
+      const type = classifyErrorType(text);
+      setMessage(`${type}: fund_grant failed: ${text}`);
+      setTxStage("error", "fund_grant");
+      log(`fund_grant failed for grant ${grantId}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disburseTokenGrant(event) {
+    event.preventDefault();
+    const grantId = parseId(form.grantIdForDisburse);
+
+    if (!ensureWallet() || !ensureSignerWallet()) return;
+    if (grantId === null) {
+      setMessage("Validation Error: grant id is required.");
+      return;
+    }
+
+    setBusy(true);
+    setTxStage("pending", "disburse_grant");
+    try {
+      const tx = await invokeContractWrite(walletAddress, "disburse_grant", [
+        toScAddress(walletAddress),
+        toScU32(grantId),
+      ]);
+      await fetchGrantById(grantId);
+      setMessage(`Grant ${grantId} disbursed to recipient.`);
+      setTxStage("success", "disburse_grant", tx.hash);
+      log(`disburse_grant executed for grant ${grantId}`);
+    } catch (error) {
+      const text = friendlyError("disburse_grant", grantId, errorText(error));
+      reportError(error, { action: "disburse_grant", grantId });
+      const type = classifyErrorType(text);
+      setMessage(`${type}: disburse_grant failed: ${text}`);
+      setTxStage("error", "disburse_grant");
+      log(`disburse_grant failed for grant ${grantId}`);
     } finally {
       setBusy(false);
     }
@@ -485,6 +607,7 @@ export default function App() {
       log(`approve executed on-chain for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("approve", grantId, errorText(error));
+      reportError(error, { action: "approve", grantId });
       const type = classifyErrorType(text);
       setMessage(`${type}: approve failed: ${text}`);
       setTxStage("error", "approve");
@@ -518,6 +641,7 @@ export default function App() {
       log(`get_grant simulated successfully for grant ${grantId}`);
     } catch (error) {
       const text = friendlyError("get_grant", grantId, errorText(error));
+      reportError(error, { action: "get_grant", grantId });
       const type = classifyErrorType(text);
       setMessage(`${type}: get_grant failed: ${text}`);
       setTxStage("error", "get_grant");
@@ -544,8 +668,9 @@ export default function App() {
         <p className="eyebrow">Soroban Contract Frontend</p>
         <h1>Grant Distribution Dashboard</h1>
         <p className="subcopy">
-          Interactive React interface for create_grant, apply, approve, and
-          get_grant, integrated to Soroban testnet using your deployed contract.
+          Interactive React interface for grant + tokenized grant operations,
+          including create/apply/approve, escrow funding, disbursement, and live
+          on-chain event monitoring on Soroban testnet.
         </p>
         <div className="hero-meta">
           <p className="pill">Contract: {CONTRACT_ID}</p>
@@ -611,6 +736,10 @@ export default function App() {
           <h3>{stats.pending}</h3>
         </article>
         <article className="stat-card">
+          <p>Token Grants</p>
+          <h3>{stats.tokenized}</h3>
+        </article>
+        <article className="stat-card">
           <p>Total Value</p>
           <h3>{stats.totalAmount}</h3>
         </article>
@@ -652,6 +781,54 @@ export default function App() {
             </label>
             <button type="submit" disabled={busy}>
               Run create_grant
+            </button>
+          </form>
+        </section>
+
+        <section className="panel">
+          <h2>Create Token Grant</h2>
+          <form onSubmit={createTokenGrant}>
+            <label>
+              Creator Address
+              <input
+                name="creator"
+                value={form.creator}
+                onChange={updateField}
+                readOnly
+                placeholder="G..."
+              />
+            </label>
+            <label>
+              Grant ID
+              <input
+                name="id"
+                value={form.id}
+                onChange={updateField}
+                inputMode="numeric"
+                placeholder="2"
+              />
+            </label>
+            <label>
+              Token Contract Address
+              <input
+                name="tokenAddress"
+                value={form.tokenAddress}
+                onChange={updateField}
+                placeholder="C..."
+              />
+            </label>
+            <label>
+              Amount
+              <input
+                name="amount"
+                value={form.amount}
+                onChange={updateField}
+                inputMode="numeric"
+                placeholder="1000"
+              />
+            </label>
+            <button type="submit" disabled={busy}>
+              Run create_token_grant
             </button>
           </form>
         </section>
@@ -715,6 +892,44 @@ export default function App() {
         </section>
 
         <section className="panel">
+          <h2>Fund Token Grant</h2>
+          <form onSubmit={fundTokenGrant}>
+            <label>
+              Grant ID
+              <input
+                name="grantIdForFund"
+                value={form.grantIdForFund}
+                onChange={updateField}
+                inputMode="numeric"
+                placeholder="2"
+              />
+            </label>
+            <button type="submit" disabled={busy}>
+              Run fund_grant
+            </button>
+          </form>
+        </section>
+
+        <section className="panel">
+          <h2>Disburse Token Grant</h2>
+          <form onSubmit={disburseTokenGrant}>
+            <label>
+              Grant ID
+              <input
+                name="grantIdForDisburse"
+                value={form.grantIdForDisburse}
+                onChange={updateField}
+                inputMode="numeric"
+                placeholder="2"
+              />
+            </label>
+            <button type="submit" disabled={busy}>
+              Run disburse_grant
+            </button>
+          </form>
+        </section>
+
+        <section className="panel">
           <h2>Get Grant</h2>
           <form onSubmit={getGrant}>
             <label>
@@ -742,6 +957,8 @@ export default function App() {
                 <li>Amount: {selectedGrant.amount}</li>
                 <li>Recipient: {selectedGrant.recipient ?? "None"}</li>
                 <li>Approved: {selectedGrant.approved ? "Yes" : "No"}</li>
+                <li>Token Contract: {selectedGrant.token ?? "Native/None"}</li>
+                <li>Funded: {selectedGrant.funded ? "Yes" : "No"}</li>
               </ul>
             )}
           </div>
@@ -762,6 +979,8 @@ export default function App() {
                     <th>Amount</th>
                     <th>Recipient</th>
                     <th>Approved</th>
+                    <th>Token</th>
+                    <th>Funded</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -774,6 +993,8 @@ export default function App() {
                       <td data-label="Approved">
                         {grant.approved ? "Yes" : "No"}
                       </td>
+                      <td data-label="Token">{grant.token ?? "-"}</td>
+                      <td data-label="Funded">{grant.funded ? "Yes" : "No"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -17,6 +17,8 @@ describe("normalizeGrant", () => {
       amount: "2500",
       recipient: "GRECIPIENTADDRESS1111111111111111111111111111111111",
       approved: true,
+      token: null,
+      funded: false,
     });
   });
 
@@ -37,6 +39,8 @@ describe("normalizeGrant", () => {
       amount: "99",
       recipient: null,
       approved: false,
+      token: null,
+      funded: false,
     });
   });
 
@@ -55,6 +59,8 @@ describe("normalizeGrant", () => {
       amount: "1234",
       recipient: "GRECIPIENT333333333333333333333333333333333333333",
       approved: true,
+      token: null,
+      funded: false,
     });
   });
 
