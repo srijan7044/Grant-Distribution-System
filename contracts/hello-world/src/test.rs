@@ -112,7 +112,8 @@ fn lifecycle_create_apply_approve() {
 }
 
 #[test]
-fn rejects_duplicate_and_missing_grants() {
+#[should_panic]
+fn rejects_duplicate_grants() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -120,21 +121,26 @@ fn rejects_duplicate_and_missing_grants() {
     let client = GrantContractClient::new(&env, &contract_id);
 
     let creator = Address::generate(&env);
-    let applicant = Address::generate(&env);
 
     // First creation works
     client.create_grant(&creator, &7, &25);
+    // Duplicate create should panic via generated non-try client.
+    client.create_grant(&creator, &7, &30);
+}
 
-    // Non-try generated client methods panic on contract errors.
-    let duplicate_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        client.create_grant(&creator, &7, &30);
-    }));
-    assert!(duplicate_result.is_err());
+#[test]
+#[should_panic]
+fn rejects_missing_grants_on_apply() {
+    let env = Env::default();
+    env.mock_all_auths();
 
-    let missing_grant_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        client.apply(&applicant, &99);
-    }));
-    assert!(missing_grant_result.is_err());
+    let contract_id = env.register(GrantContract, ());
+    let client = GrantContractClient::new(&env, &contract_id);
+
+    let applicant = Address::generate(&env);
+
+    // Applying to a missing grant should panic via generated non-try client.
+    client.apply(&applicant, &99);
 }
 
 #[test]
