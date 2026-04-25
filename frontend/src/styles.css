@@ -186,7 +186,7 @@ select {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.95rem;
   margin-bottom: 1rem;
 }
@@ -252,12 +252,6 @@ select {
   padding: 1rem 1rem 1.05rem;
   backdrop-filter: blur(10px);
   animation: fade-up 520ms ease;
-}
-
-.panel:nth-child(1),
-.panel:nth-child(2),
-.panel:nth-child(3),
-.panel:nth-child(4) {
   grid-column: span 6;
 }
 
@@ -585,10 +579,7 @@ th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .panel:nth-child(1),
-  .panel:nth-child(2),
-  .panel:nth-child(3),
-  .panel:nth-child(4),
+  .panel,
   .panel.wide,
   .panel.side {
     grid-column: span 12;

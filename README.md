@@ -1,25 +1,17 @@
 Hi everyone, Name:Srijan Ray
 
-
-
 # Grant Distribution System
-
 
 A Soroban smart contract workspace Frontend for decentralized grant management on Stellar.
 
 <img width="1844" height="1180" alt="image" src="https://github.com/user-attachments/assets/b4fc4632-bce2-4566-ac77-3e8d344f5b79" />
 
-
 #New Catagories have introduced for good user-experience.
 <img width="1911" height="450" alt="image" src="https://github.com/user-attachments/assets/d3f7883b-2856-4eec-a683-288e08681b19" />
-
-
 
 #Update Light Theme and Dark Theme introduced.
 
 <img width="1897" height="1095" alt="image" src="https://github.com/user-attachments/assets/fa549ee8-75c3-4641-9f52-c431d4f4c832" />
-
-
 
 # Contract Address Page (DashBoard)
 
@@ -27,13 +19,13 @@ A Soroban smart contract workspace for decentralized grant management on Stellar
 
 ![Project Banner](image.png)
 
+## Trnsactions are made Possible
 
-## Trnsactions are made Possible 
 <img width="1416" height="866" alt="image" src="https://github.com/user-attachments/assets/d486af41-8091-4c83-afdc-52b374a99c36" />
 
-## the proof and record 
-<img width="1515" height="473" alt="image" src="https://github.com/user-attachments/assets/617e5fd2-0a72-4148-b035-bf7a50c1682a" />
+## the proof and record
 
+<img width="1515" height="473" alt="image" src="https://github.com/user-attachments/assets/617e5fd2-0a72-4148-b035-bf7a50c1682a" />
 
 ## Overview
 
@@ -275,6 +267,7 @@ Tests       4 passed (4)
 ```
 
 Screenshot placeholder (required for submission):
+
 - Add screenshot here: `docs/test-output.png`
 
 ### Required Submission Info
@@ -295,4 +288,115 @@ Screenshot placeholder (required for submission):
 - `69df64a` style: polish wallet monitor and responsive event dashboard
 - `c7c7a35` feat: implement suggested grant ID functionality and enhance UI components
 
+## Level 4 - Advanced Patterns + Production Readiness
 
+This level adds inter-contract behavior, tokenized grant lifecycle support, production CI/CD automation, and mobile-ready UX.
+
+### Advanced Contract Patterns Implemented
+
+- Inter-contract calls:
+  - `fund_grant` calls Soroban token contract `transfer` to move creator funds into escrow (current grant contract).
+  - `disburse_grant` calls Soroban token contract `transfer` to pay approved recipient from escrow.
+- Tokenized grant lifecycle:
+  - `create_token_grant(env, creator, id, token_contract, amount)`
+  - `fund_grant(env, creator, grant_id)`
+  - `disburse_grant(env, admin, grant_id)`
+- Structured contract errors (`GrantError`) for safer production handling.
+- Event emission added for every major lifecycle transition (`create`, `tcreate`, `apply`, `fund`, `approve`, `disb`).
+
+### Production CI/CD
+
+GitHub Actions pipeline added in `.github/workflows/ci.yml` with:
+
+- Rust contract checks:
+  - `cargo test --workspace --all-targets`
+  - `cargo build -p hello-world --release`
+- Frontend checks:
+  - `npm ci`
+  - `npm run test`
+  - `npm run build`
+
+Badge placeholder (replace OWNER/REPO):
+
+```md
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+```
+
+### Error Tracking (Production)
+
+Sentry is integrated in the frontend for runtime and operation-level error reporting.
+
+- Package used: `@sentry/react`
+- Initialization file: `frontend/src/monitoring.js`
+- Startup hook: `frontend/src/main.jsx`
+- Action-level reporting: `frontend/src/App.jsx`
+
+Set environment values before deploy:
+
+```bash
+# frontend/.env
+VITE_SENTRY_DSN=YOUR_SENTRY_DSN
+VITE_APP_ENV=production
+```
+
+Template file included:
+
+- `frontend/.env.example`
+
+If `VITE_SENTRY_DSN` is empty, monitoring stays disabled automatically.
+
+### Performance Optimization
+
+Frontend build optimization added in `frontend/vite.config.js`:
+
+- Source maps enabled for production debugging
+- Vendor chunk splitting:
+  - `stellar-vendor` for Stellar SDK + Freighter API
+  - `sentry-vendor` for monitoring SDK
+  - `react-vendor` for React runtime
+- Chunk warning threshold raised to `900` after split optimization
+
+### Mobile Responsive
+
+- Dashboard remains responsive on mobile with stacked panels, touch-friendly actions, and table-to-card conversion.
+- Required screenshot placeholder:
+  - Add mobile screenshot path: `docs/mobile-responsive-view.png`
+
+### Submission Checklist Mapping
+
+- Inter-contract call working: Implemented (`fund_grant`, `disburse_grant`)
+- Custom token or pool deployed (if used): Tokenized grant flow supported (record deployed token address below)
+- CI/CD running: Implemented via GitHub Actions workflow
+- Mobile responsive: Implemented in frontend CSS and layout
+- Minimum 8+ meaningful commits: Ensure before submission (`git log --oneline`)
+
+### Required README Evidence (Fill Before Submission)
+
+- Public GitHub repository:
+  - `https://github.com/srijan7044/Grant-Distribution-System.git`
+- Live demo link (Vercel/Netlify/etc):
+  - `https://REPLACE_WITH_LIVE_DEMO_URL`
+- Screenshot: mobile responsive view:
+  - `docs/mobile-responsive-view.png`
+- Screenshot or badge: CI/CD pipeline running:
+  - `docs/ci-pipeline-running.png` or badge above
+- Screenshot: Sentry issue dashboard (recommended proof for error tracking):
+  - `docs/sentry-issue-sample.png`
+- Contract address and transaction hash for inter-contract flow:
+  - Grant contract address: `REPLACE_WITH_CURRENT_CONTRACT_ADDRESS`
+  - Inter-contract tx hash (`fund_grant` or `disburse_grant`): `REPLACE_WITH_TX_HASH`
+- Token address (if custom token used):
+  - `REPLACE_WITH_TOKEN_OR_POOL_ADDRESS`
+
+### Suggested Verification Commands
+
+```bash
+# workspace root
+cargo test --workspace --all-targets
+cargo build -p hello-world --release
+
+# frontend
+cd frontend
+npm test
+npm run build
+```

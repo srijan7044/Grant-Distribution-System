@@ -149,13 +149,15 @@ export function normalizeGrant(rawGrant) {
   }
 
   if (Array.isArray(value)) {
-    const [id, creator, amount, recipient, approved] = value;
+    const [id, creator, amount, recipient, approved, token, funded] = value;
     return {
       id: toSafeNumber(id),
       creator: stringifyAddress(creator) || "",
       amount: toDisplayAmount(amount),
       recipient: stringifyAddress(recipient),
       approved: Boolean(approved),
+      token: stringifyAddress(token),
+      funded: Boolean(funded),
     };
   }
 
@@ -165,5 +167,7 @@ export function normalizeGrant(rawGrant) {
     amount: toDisplayAmount(value.amount),
     recipient: stringifyAddress(value.recipient),
     approved: Boolean(value.approved),
+    token: stringifyAddress(value.token),
+    funded: Boolean(value.funded),
   };
 }
