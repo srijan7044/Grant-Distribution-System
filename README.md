@@ -378,9 +378,12 @@ Frontend build optimization added in `frontend/vite.config.js`:
 - Live demo link (Vercel/Netlify/etc):
   - `https://REPLACE_WITH_LIVE_DEMO_URL`
 - Screenshot: mobile responsive view:
-  - `docs/mobile-responsive-view.png`
+  - <img width="492" height="915" alt="Screenshot 2026-04-25 161629" src="https://github.com/user-attachments/assets/08029766-654c-48a5-b15d-f7f91363e01d" />
+
 - Screenshot or badge: CI/CD pipeline running:
   - Badge above, or save the attached CI screenshot as `docs/ci-pipeline-running.png`
+  - <img width="1918" height="1044" alt="Screenshot 2026-04-25 165324" src="https://github.com/user-attachments/assets/029e990b-0b6c-4366-a2de-24d33b58bf59" />
+
 - Screenshot: Sentry issue dashboard (recommended proof for error tracking):
   - `docs/sentry-issue-sample.png`
 - Contract address and transaction hash for inter-contract flow:
