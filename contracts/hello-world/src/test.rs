@@ -125,10 +125,16 @@ fn rejects_duplicate_and_missing_grants() {
     // First creation works
     client.create_grant(&creator, &7, &25);
 
-    // Duplicate or invalid cases → just call them (no assert_eq with Result)
-    // If your contract panics, test will fail automatically (which is fine)
-    client.create_grant(&creator, &7, &30);
-    client.apply(&applicant, &99);
+    // Non-try generated client methods panic on contract errors.
+    let duplicate_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        client.create_grant(&creator, &7, &30);
+    }));
+    assert!(duplicate_result.is_err());
+
+    let missing_grant_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        client.apply(&applicant, &99);
+    }));
+    assert!(missing_grant_result.is_err());
 }
 
 #[test]
