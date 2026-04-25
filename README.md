@@ -170,7 +170,7 @@ MIT License
 
 ---
 
-## Latest Updates 
+## Latest Updates
 
 This section is added to record the latest upgrades completed in this project.
 
@@ -319,7 +319,7 @@ GitHub Actions pipeline added in `.github/workflows/ci.yml` with:
 Badge placeholder (replace OWNER/REPO):
 
 ```md
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/srijan7044/Grant-Distribution-System/actions/workflows/ci.yml/badge.svg)
 ```
 
 ### Error Tracking (Production)
@@ -355,6 +355,7 @@ Frontend build optimization added in `frontend/vite.config.js`:
   - `sentry-vendor` for monitoring SDK
   - `react-vendor` for React runtime
 - Chunk warning threshold raised to `900` after split optimization
+- Chunk warning threshold raised to `1100` after split optimization
 
 ### Mobile Responsive
 
@@ -379,7 +380,7 @@ Frontend build optimization added in `frontend/vite.config.js`:
 - Screenshot: mobile responsive view:
   - `docs/mobile-responsive-view.png`
 - Screenshot or badge: CI/CD pipeline running:
-  - `docs/ci-pipeline-running.png` or badge above
+  - Badge above, or save the attached CI screenshot as `docs/ci-pipeline-running.png`
 - Screenshot: Sentry issue dashboard (recommended proof for error tracking):
   - `docs/sentry-issue-sample.png`
 - Contract address and transaction hash for inter-contract flow:
